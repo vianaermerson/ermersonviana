@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Chá Revelação - Qual será o sexo do bebê?</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-100px) rotate(180deg); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .event-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .event-name {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 50%, #D4AF37 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .countdown {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 50px;
+            display: inline-block;
+            font-size: 1.2rem;
+            margin-top: 15px;
+        }
+
+        .question {
+            font-size: 2rem;
+            color: #333;
+            text-align: center;
+            margin: 30px 0;
+            font-weight: bold;
+        }
+
+        .name-input-container {
+            margin: 20px auto;
+            max-width: 400px;
+        }
+
+        .name-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 50px;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .name-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .vote-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin: 30px 0 20px 0;
+        }
+
+        .vote-btn {
+            padding: 20px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .vote-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .vote-btn:active {
+            transform: scale(0.95);
+        }
+
+        .vote-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-boy {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-girl {
+            background: linear-gradient(135deg, #fa709a 0%, #fe40b287 100%);
+            color: white;
+        }
+
+        .results {
+            margin-top: 40px;
+        }
+
+        .result-item {
+            margin-bottom: 25px;
+        }
+
+        .result-label {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 40px;
+            background: #e0e0e0;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .progress-boy {
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+        }
+
+        .progress-girl {
+            background: linear-gradient(90deg, #fa709a, #fe40b287);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            text-align: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 20px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #B8860B;
+        }
+
+        .voters-list {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .voter-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            transition: background 0.3s;
+        }
+
+        .voter-item:hover {
+            background: rgba(0,0,0,0.05);
+        }
+
+        .voter-name {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .voter-vote {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .voter-vote.boy {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+
+        .voter-vote.girl {
+            background: linear-gradient(135deg, #fa709a, #fe40b287);
+            color: white;
+        }
+
+        .voter-date {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .share-section {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .share-btn {
+            padding: 12px 25px;
+            background: #25D366;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.3s;
+        }
+
+        .share-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .qrcode {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Rodapé */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            font-size: 0.9rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .footer a {
+            color: #FFD700;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        .footer a:hover {
+            color: #FFF;
+            text-decoration: underline;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #ff0;
+            position: absolute;
+            animation: confetti-fall 3s linear forwards;
+            pointer-events: none;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #333;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .glass-card {
+                padding: 20px;
+            }
+            
+            .vote-btn {
+                padding: 15px 25px;
+                font-size: 1.1rem;
+            }
+            
+            .event-name {
+                font-size: 1.8rem;
+            }
+            
+            .question {
+                font-size: 1.3rem;
+            }
+            
+            .name-input {
+                font-size: 1rem;
+                padding: 12px 15px;
+            }
+
+            .voter-item {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+
+            .footer {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-decoration" id="bgDecoration"></div>
+    
+    <div class="container">
+        <div class="glass-card">
+            <div class="event-header">
+                <h1 class="event-name">🎉 Votação - Théo ou Maria Elisa? 🎉</h1>
+                <div class="countdown" id="countdown">
+                    Carregando...
+                </div>
+            </div>
+            
+            <div class="question">
+                🤠 Será o Vaqueirinho ou a Vaqueirinha? 🤠
+            </div>
+            
+            <div class="name-input-container">
+                <input 
+                    type="text" 
+                    id="voterName" 
+                    class="name-input" 
+                    placeholder="✏️ Digite seu nome aqui..."
+                    maxlength="50"
+                    autocomplete="off"
+                >
+            </div>
+            
+            <div class="vote-buttons">
+                <button class="vote-btn btn-boy" id="voteBoy">
+                    💙 MENINO - THÉO
+                </button>
+                <button class="vote-btn btn-girl" id="voteGirl">
+                    💖 MENINA - MARIA ELISA
+                </button>
+            </div>
+        </div>
+        
+        <div class="glass-card">
+            <h2 style="text-align: center; margin-bottom: 30px;">📊 Resultados da Votação</h2>
+            
+            <div class="results">
+                <div class="result-item">
+                    <div class="result-label">
+                        <span>💙 Théo (Menino)</span>
+                        <span id="boyPercent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-boy" id="boyBar" style="width: 0%">
+                            <span id="boyCount">0 votos</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="result-item">
+                    <div class="result-label">
+                        <span>💖 Maria Elisa (Menina)</span>
+                        <span id="girlPercent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-girl" id="girlBar" style="width: 0%">
+                            <span id="girlCount">0 votos</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalVotes">0</div>
+                    <div>Total de Votos</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="glass-card">
+            <h2 style="text-align: center; margin-bottom: 20px;">👥 Últimos que votaram</h2>
+            <div class="voters-list" id="votersList">
+                <div style="text-align: center; color: #999;">Carregando...</div>
+            </div>
+        </div>
+        
+        <div class="glass-card">
+            <div class="share-section">
+                <button class="share-btn" onclick="shareWhatsApp()">
+                    📱 Compartilhar no WhatsApp
+                </button>
+            </div>
+            <div class="qrcode" id="qrcode"></div>
+            <p style="text-align: center; margin-top: 15px; color: #666; font-size: 0.9rem;">
+                📸 Escaneie o QR Code para acessar a votação
+            </p>
+        </div>
+    </div>
+    
+    <!-- Rodapé com créditos -->
+    <div class="footer">
+        <p>✨ Desenvolvido por <strong>Ermerson Viana</strong> ✨</p>
+        <p style="font-size: 0.8rem; margin-top: 5px;">© 2026 - Todos os direitos reservados</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script>
+        const API_URL = window.location.origin;
+        let hasVoted = localStorage.getItem('hasVoted');
+        
+        new QRCode(document.getElementById("qrcode"), {
+            text: window.location.href,
+            width: 128,
+            height: 128
+        });
+        
+        function updateCountdown() {
+            const targetDate = new Date();
+            targetDate.setDate(targetDate.getDate() + 25);
+            targetDate.setHours(17, 0, 0, 0);
+            
+            const now = new Date();
+            const diff = targetDate - now;
+            
+            if (diff <= 0) {
+                document.getElementById('countdown').innerHTML = "🎉 É HOJE! 🎉";
+                return;
+            }
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (86400000)) / (3600000));
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            
+            document.getElementById('countdown').innerHTML = `📅 Faltam ${days}d ${hours}h ${minutes}min para o grande dia!`;
+        }
+        
+        updateCountdown();
+        setInterval(updateCountdown, 60000);
+        
+        async function loadResults() {
+            try {
+                const response = await fetch(`${API_URL}/api/resultados`);
+                const data = await response.json();
+                
+                document.getElementById('boyCount').innerHTML = `${data.menino} votos`;
+                document.getElementById('girlCount').innerHTML = `${data.menina} votos`;
+                document.getElementById('boyPercent').innerHTML = `${data.percentualMenino}%`;
+                document.getElementById('girlPercent').innerHTML = `${data.percentualMenina}%`;
+                document.getElementById('totalVotes').innerHTML = data.total;
+                
+                document.getElementById('boyBar').style.width = `${data.percentualMenino}%`;
+                document.getElementById('girlBar').style.width = `${data.percentualMenina}%`;
+            } catch (error) {
+                console.error('Erro ao carregar resultados:', error);
+            }
+        }
+        
+        async function loadRecentVoters() {
+            try {
+                const response = await fetch(`${API_URL}/api/ultimos-votantes`);
+                const voters = await response.json();
+                
+                if (voters.length === 0) {
+                    document.getElementById('votersList').innerHTML = '<div style="text-align: center; color: #999;">Nenhum voto ainda. Seja o primeiro!</div>';
+                    return;
+                }
+                
+                const votersHtml = voters.map(voter => `
+                    <div class="voter-item">
+                        <span class="voter-name">👤 ${escapeHtml(voter.nome)}</span>
+                        <span class="voter-vote ${voter.voto === 'menino' ? 'boy' : 'girl'}">
+                            ${voter.voto === 'menino' ? '💙 Votou no Théo' : '💖 Votou na Maria Elisa'}
+                        </span>
+                        <span class="voter-date">📅 ${voter.data}</span>
+                    </div>
+                `).join('');
+                
+                document.getElementById('votersList').innerHTML = votersHtml;
+            } catch (error) {
+                console.error('Erro ao carregar votantes:', error);
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function createConfetti() {
+            for(let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                confetti.style.animationDuration = Math.random() * 2 + 1 + 's';
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = confetti.style.width;
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+        
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.background = isError ? '#f44336' : '#4caf50';
+            toast.innerHTML = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        async function votar(voto) {
+            if (hasVoted) {
+                showToast('❌ Você já votou! Apenas um voto por pessoa.', true);
+                return;
+            }
+            
+            const nomeInput = document.getElementById('voterName');
+            const nome = nomeInput.value.trim();
+            
+            if (!nome) {
+                showToast('❌ Por favor, digite seu nome antes de votar!', true);
+                nomeInput.focus();
+                return;
+            }
+            
+            if (nome.length > 50) {
+                showToast('❌ Nome muito longo! Use até 50 caracteres.', true);
+                return;
+            }
+            
+            const btnBoy = document.getElementById('voteBoy');
+            const btnGirl = document.getElementById('voteGirl');
+            btnBoy.disabled = true;
+            btnGirl.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/votar`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ nome, voto })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('hasVoted', 'true');
+                    localStorage.setItem('voterName', nome);
+                    hasVoted = true;
+                    showToast(data.message, false);
+                    createConfetti();
+                    loadResults();
+                    loadRecentVoters();
+                    nomeInput.disabled = true;
+                } else {
+                    showToast(data.error || 'Erro ao registrar voto', true);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showToast('Erro de conexão com o servidor', true);
+            } finally {
+                btnBoy.disabled = false;
+                btnGirl.disabled = false;
+            }
+        }
+        
+        function shareWhatsApp() {
+            const text = `🎉 Participe da votação do Chá Revelação! 🤠 Será o Vaqueirinho (Théo) ou a Vaqueirinha (Maria Elisa)? Vote agora: ${window.location.href}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        }
+        
+        document.getElementById('voteBoy').addEventListener('click', () => votar('menino'));
+        document.getElementById('voteGirl').addEventListener('click', () => votar('menina'));
+        
+        if (hasVoted) {
+            const savedName = localStorage.getItem('voterName');
+            if (savedName) {
+                const nomeInput = document.getElementById('voterName');
+                nomeInput.value = savedName;
+                nomeInput.disabled = true;
+            }
+        }
+        
+        loadResults();
+        loadRecentVoters();
+        setInterval(loadResults, 5000);
+        setInterval(loadRecentVoters, 10000);
+        
+        for(let i = 0; i < 20; i++) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.style.width = Math.random() * 100 + 50 + 'px';
+            bubble.style.height = bubble.style.width;
+            bubble.style.left = Math.random() * 100 + '%';
+            bubble.style.top = Math.random() * 100 + '%';
+            bubble.style.animationDelay = Math.random() * 10 + 's';
+            document.getElementById('bgDecoration').appendChild(bubble);
+        }
+    </script>
+</body>
+</html>

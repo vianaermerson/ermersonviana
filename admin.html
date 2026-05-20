@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Chá Revelação</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .login-form {
+            text-align: center;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.3s;
+            margin: 5px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .reset-btn {
+            background: #f44336;
+        }
+
+        .pdf-btn {
+            background: #ff6b6b;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .votos-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .voto-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .voto-item:hover {
+            background: #f5f5f5;
+        }
+
+        .voto-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .voto-badge.boy {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+
+        .voto-badge.girl {
+            background: linear-gradient(135deg, #fa709a, #fee140);
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .voto-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .btn-group button {
+                width: 100%;
+            }
+        }
+    </style>
+    <!-- Bibliotecas para gerar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="card" id="loginPanel">
+            <div class="login-form">
+                <h2>🔒 Painel Administrativo</h2>
+                <input type="password" id="password" placeholder="Digite a senha" autocomplete="off">
+                <button onclick="login()">Entrar</button>
+            </div>
+        </div>
+
+        <div class="card hidden" id="adminPanel">
+            <h2>📊 Estatísticas da Enquete</h2>
+            <div class="stats-grid" id="stats">
+                <div class="stat-box">
+                    <div class="stat-number" id="total">0</div>
+                    <div>Total de Votos</div>
+                </div>
+                <div class="stat-box" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                    <div class="stat-number" id="menino">0</div>
+                    <div>💙 Théo (Menino)</div>
+                </div>
+                <div class="stat-box" style="background: linear-gradient(135deg, #fa709a, #fee140);">
+                    <div class="stat-number" id="menina">0</div>
+                    <div>💖 Maria Elisa (Menina)</div>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button onclick="zerarEnquete()" class="reset-btn">🔄 Zerar Enquete</button>
+                <button onclick="gerarRelatorioPDF()" class="pdf-btn">📄 Gerar Relatório PDF</button>
+            </div>
+            
+            <h3 style="margin-top: 30px;">📝 Histórico Completo de Votos</h3>
+            <div class="votos-list" id="votosRecentes">
+                <div class="loading">Carregando votos...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+        let autenticado = false;
+        let dadosCompletos = null;
+
+        async function login() {
+            const senha = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/admin/verificar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ senha })
+                });
+                
+                if (response.ok) {
+                    autenticado = true;
+                    document.getElementById('loginPanel').classList.add('hidden');
+                    document.getElementById('adminPanel').classList.remove('hidden');
+                    carregarEstatisticas();
+                } else {
+                    alert('Senha incorreta!');
+                }
+            } catch (error) {
+                alert('Erro ao verificar senha');
+            }
+        }
+
+        async function carregarEstatisticas() {
+            if (!autenticado) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/admin/estatisticas?senha=chaadmin2024`);
+                const data = await response.json();
+                dadosCompletos = data;
+                
+                document.getElementById('total').innerHTML = data.total;
+                document.getElementById('menino').innerHTML = data.menino;
+                document.getElementById('menina').innerHTML = data.menina;
+                
+                if (data.votosRecentes && data.votosRecentes.length > 0) {
+                    const votosHtml = data.votosRecentes.map(voto => `
+                        <div class="voto-item">
+                            <strong>👤 ${voto.nome}</strong>
+                            <span class="voto-badge ${voto.voto === 'menino' ? 'boy' : 'girl'}">
+                                ${voto.voto === 'menino' ? '💙 Votou no Théo' : '💖 Votou na Maria Elisa'}
+                            </span>
+                            <span>📅 ${voto.data}</span>
+                            <span>🌐 IP: ${voto.ip}</span>
+                        </div>
+                    `).join('');
+                    document.getElementById('votosRecentes').innerHTML = votosHtml;
+                } else {
+                    document.getElementById('votosRecentes').innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">Nenhum voto registrado ainda</div>';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('votosRecentes').innerHTML = '<div style="text-align: center; padding: 20px; color: #f44336;">Erro ao carregar votos</div>';
+            }
+        }
+
+        async function zerarEnquete() {
+            if (!confirm('⚠️ ATENÇÃO! Isso irá apagar TODOS os votos. Tem certeza?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/admin/zerar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ senha: 'chaadmin2024' })
+                });
+                
+                if (response.ok) {
+                    alert('✅ Enquete zerada com sucesso!');
+                    carregarEstatisticas();
+                    localStorage.clear();
+                } else {
+                    alert('Erro ao zerar enquete');
+                }
+            } catch (error) {
+                alert('Erro de conexão');
+            }
+        }
+
+        async function gerarRelatorioPDF() {
+            if (!dadosCompletos) {
+                alert('Aguardando carregamento dos dados...');
+                return;
+            }
+
+            // Mostrar loading
+            const btn = document.querySelector('.pdf-btn');
+            const textoOriginal = btn.innerHTML;
+            btn.innerHTML = '⏳ Gerando PDF...';
+            btn.disabled = true;
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                // Configurações da página
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                let yPos = 20;
+
+                // Função para adicionar nova página se necessário
+                function checkNewPage(neededSpace = 30) {
+                    if (yPos + neededSpace > pageHeight - 20) {
+                        doc.addPage();
+                        yPos = 20;
+                        return true;
+                    }
+                    return false;
+                }
+
+                // TÍTULO PRINCIPAL
+                doc.setFontSize(24);
+                doc.setTextColor(102, 126, 234);
+                doc.setFont('helvetica', 'bold');
+                doc.text('🎀 Chá Revelação - Relatório de Votação 🎀', pageWidth / 2, yPos, { align: 'center' });
+                yPos += 15;
+
+                // DATA E HORA
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.setFont('helvetica', 'normal');
+                const dataAtual = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                doc.text(`Gerado em: ${dataAtual}`, pageWidth - 20, yPos, { align: 'right' });
+                yPos += 10;
+
+                // LINHA SEPARADORA
+                doc.setDrawColor(200, 200, 200);
+                doc.line(20, yPos, pageWidth - 20, yPos);
+                yPos += 10;
+
+                // RESUMO ESTATÍSTICO
+                doc.setFontSize(16);
+                doc.setTextColor(0, 0, 0);
+                doc.setFont('helvetica', 'bold');
+                doc.text('📊 Resumo da Votação', 20, yPos);
+                yPos += 10;
+
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`Total de votos: ${dadosCompletos.total}`, 25, yPos);
+                yPos += 7;
+                doc.setTextColor(79, 172, 254);
+                doc.text(`💙 Théo (Menino): ${dadosCompletos.menino} votos (${dadosCompletos.total > 0 ? ((dadosCompletos.menino / dadosCompletos.total) * 100).toFixed(1) : 0}%)`, 25, yPos);
+                yPos += 7;
+                doc.setTextColor(250, 112, 154);
+                doc.text(`💖 Maria Elisa (Menina): ${dadosCompletos.menina} votos (${dadosCompletos.total > 0 ? ((dadosCompletos.menina / dadosCompletos.total) * 100).toFixed(1) : 0}%)`, 25, yPos);
+                yPos += 15;
+
+                // RESETAR COR
+                doc.setTextColor(0, 0, 0);
+
+                // LISTA DE VOTANTES
+                checkNewPage(30);
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.text('📝 Lista de Votantes', 20, yPos);
+                yPos += 10;
+
+                if (!dadosCompletos.votosRecentes || dadosCompletos.votosRecentes.length === 0) {
+                    doc.setFontSize(12);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('Nenhum voto registrado ainda.', 25, yPos);
+                } else {
+                    // CABEÇALHO DA TABELA
+                    doc.setFillColor(102, 126, 234);
+                    doc.rect(20, yPos, pageWidth - 40, 10, 'F');
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('Nº', 25, yPos + 7);
+                    doc.text('Nome', 40, yPos + 7);
+                    doc.text('Voto', 110, yPos + 7);
+                    doc.text('Data/Hora', 150, yPos + 7);
+                    doc.text('IP', 190, yPos + 7);
+                    yPos += 12;
+
+                    // DADOS DA TABELA
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    
+                    dadosCompletos.votosRecentes.forEach((voto, index) => {
+                        checkNewPage(8);
+                        
+                        // Alternar cor de fundo das linhas
+                        if (index % 2 === 0) {
+                            doc.setFillColor(245, 245, 245);
+                            doc.rect(20, yPos - 4, pageWidth - 40, 7, 'F');
+                        }
+                        
+                        doc.text((index + 1).toString(), 25, yPos);
+                        
+                        // Nome (limitado a 20 caracteres)
+                        let nome = voto.nome.length > 25 ? voto.nome.substring(0, 22) + '...' : voto.nome;
+                        doc.text(nome, 40, yPos);
+                        
+                        // Voto com cor
+                        if (voto.voto === 'menino') {
+                            doc.setTextColor(79, 172, 254);
+                            doc.text('💙 Menino', 110, yPos);
+                        } else {
+                            doc.setTextColor(250, 112, 154);
+                            doc.text('💖 Menina', 110, yPos);
+                        }
+                        doc.setTextColor(0, 0, 0);
+                        
+                        doc.text(voto.data, 150, yPos);
+                        doc.text(voto.ip, 190, yPos);
+                        
+                        yPos += 7;
+                    });
+                }
+
+                // RODAPÉ
+                const totalPages = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= totalPages; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.setTextColor(150, 150, 150);
+                    doc.text(
+                        `Página ${i} de ${totalPages}`,
+                        pageWidth / 2,
+                        pageHeight - 10,
+                        { align: 'center' }
+                    );
+                    doc.text(
+                        `Desenvolvido por Ermerson Viana`,
+                        pageWidth - 20,
+                        pageHeight - 10,
+                        { align: 'right' }
+                    );
+                }
+
+                // SALVAR PDF
+                const nomeArquivo = `relatorio-cha-revelacao-${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
+                doc.save(nomeArquivo);
+                
+                alert('✅ Relatório PDF gerado com sucesso!');
+            } catch (error) {
+                console.error('Erro ao gerar PDF:', error);
+                alert('❌ Erro ao gerar PDF. Tente novamente.');
+            } finally {
+                btn.innerHTML = textoOriginal;
+                btn.disabled = false;
+            }
+        }
+
+        setInterval(() => {
+            if (autenticado) carregarEstatisticas();
+        }, 5000);
+    </script>
+</body>
+</html>
